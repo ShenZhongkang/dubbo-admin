@@ -16,7 +16,7 @@
   -->
 
 <template>
-  <v-container grid-list-xl fluid >
+  <v-container grid-list-xl fluid>
     <v-layout row wrap>
       <v-flex lg12>
         <breadcrumb title="serviceRelation" :items="breads"></breadcrumb>
@@ -25,91 +25,90 @@
 
     <v-flex lg12>
       <v-card>
-          <div id="chartContent" style="width:100%;height:500%;"/>
+        <div id="chartContent" style="width:100%;height:500%;" />
       </v-card>
     </v-flex>
-
   </v-container>
-
 </template>
 <script>
-  import Breadcrumb from '@/components/public/Breadcrumb'
-  export default {
-    components: {
-      Breadcrumb
-    },
-    data: () => ({
-      success: null,
-      breads: [
-        {
-          text: 'serviceMetrics',
-          href: ''
-        },
-        {
-          text: 'serviceRelation',
-          href: ''
-        }
-      ],
-      responseData: null
-    }),
-    methods: {
-      initData: function () {
-        // eslint-disable-next-line no-undef
-        this.chartContent = echarts.init(document.getElementById('chartContent'))
-        this.chartContent.showLoading()
-        this.$axios.get('/metrics/relation')
-          .then(response => {
-            if (response && response.status === 200) {
-              this.success = true
-              this.responseData = response.data
-              this.responseData.type = 'force'
-              this.initChart(this.responseData)
-            }
-          })
-          .catch(error => {
-            this.success = false
-            this.responseData = error.response.data
-          })
+import Breadcrumb from "@/components/public/Breadcrumb";
+export default {
+  components: {
+    Breadcrumb
+  },
+  data: () => ({
+    success: null,
+    breads: [
+      {
+        text: "serviceMetrics",
+        href: ""
       },
-      initChart: function (data) {
-        this.chartContent.hideLoading()
+      {
+        text: "serviceRelation",
+        href: ""
+      }
+    ],
+    responseData: null
+  }),
+  methods: {
+    initData: function() {
+      // eslint-disable-next-line no-undef
+      this.chartContent = echarts.init(document.getElementById("chartContent"));
+      this.chartContent.showLoading();
+      this.$axios
+        .get("/metrics/relation")
+        .then(response => {
+          if (response && response.status === 200) {
+            this.success = true;
+            this.responseData = response.data;
+            this.responseData.type = "force";
+            this.initChart(this.responseData);
+          }
+        })
+        .catch(error => {
+          this.success = false;
+          this.responseData = error.response.data;
+        });
+    },
+    initChart: function(data) {
+      this.chartContent.hideLoading();
 
-        const option = {
-          legend: {
-            top: 'bottom',
-            data: data.categories.map(i => i.name)
-          },
-          series: [{
-            type: 'graph',
-            layout: 'force',
-            animation: false,
-            label: {
-              normal: {
-                show: true,
-                position: 'right'
-              }
-            },
+      const links = [...this.responseData.links];
+
+      const option = {
+        legend: {
+          data: data.categories.map(i => i.name)
+        },
+        animationDurationUpdate: 1000,
+        animationEasingUpdate: "quinticInOut",
+        series: [
+          {
+            type: "graph",
+            layout: "force",
+            symbolSize: 20,
             draggable: true,
-            data: data.nodes.map(function (node, idx) {
-              node.id = idx
-              return node
+            label: {
+              show: true
+            },
+            force: {
+              repulsion: 1000,
+              edgeLength: 20
+            },
+            edgeSymbol: ["", "arrow"],
+            data: data.nodes.map(function(node, idx) {
+              node.id = idx;
+              return node;
             }),
             categories: this.responseData.categories,
-            force: {
-              edgeLength: 100,
-              repulsion: 10
-            },
-            edges: data.links,
-            edgeSymbol: ['', 'arrow'],
-            edgeSymbolSize: 7
-          }]
-        }
-        this.chartContent.setOption(option)
-      }
-    },
-    mounted: function () {
-      this.initData()
+            links
+          }
+        ]
+      };
+      this.chartContent.setOption(option);
     }
-
+  },
+  mounted: function() {
+    this.initData();
   }
+};
 </script>
